@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🩸 Blood Group Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff4757, #ff3838, #dc143c, #b71c1c);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated blood drops */
+        .blood-drop {
+            position: absolute;
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.3);
+            animation: fall 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            text-align: center;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        h1 {
+            color: #dc143c;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            font-weight: bold;
+        }
+
+        h2 {
+            color: #b71c1c;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .thought {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-style: italic;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ff8e8e;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #dc143c;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.3);
+            transform: translateY(-2px);
+        }
+
+        button {
+            background: linear-gradient(45deg, #dc143c, #ff4757);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 15px 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .blood-type-info {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+        .blood-type-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .prediction-result {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .possibilities {
+            display: grid;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .possibility {
+            background: rgba(255, 107, 107, 0.1);
+            border: 2px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .probability {
+            background: #dc143c;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ff8e8e;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .rating {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .star {
+            font-size: 2rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+            margin: 0 5px;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #ffd700;
+        }
+
+        .thank-you {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .thank-you h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .thank-you .message {
+            font-size: 1.3rem;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated blood drops -->
+    <div class="blood-drops-container"></div>
+
+    <div class="container">
+        <!-- Page 1: Login -->
+        <div class="page active" id="page1">
+            <div class="card">
+                <h1>🩸 Blood Predictor</h1>
+                <div class="thought">
+                    💭 "Discover the genetic secrets hidden in your bloodline! Science meets wonder in every prediction." ✨
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">👤 Username:</label>
+                    <input type="text" id="username" placeholder="Enter your username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">🔐 Password:</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+                
+                <button onclick="nextPage(1)">🚀 Start Journey</button>
+            </div>
+        </div>
+
+        <!-- Page 2: Mother's Information -->
+        <div class="page" id="page2">
+            <div class="card">
+                <h2>👩‍👧‍👦 Mother's Information</h2>
+                <div class="thought">
+                    💭 "A mother's love flows through every drop of blood, carrying the gift of life and genetic heritage." 💝
+                </div>
+                
+                <div class="form-group">
+                    <label for="motherName">🌸 Mother's Name:</label>
+                    <input type="text" id="motherName" placeholder="Enter mother's name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="motherBloodType">🩸 Mother's Blood Type:</label>
+                    <select id="motherBloodType" required>
+                        <option value="">Select Blood Type</option>
+                        <option value="A">Type A - The Harmonious 🎵</option>
+                        <option value="B">Type B - The Independent 🦅</option>
+                        <option value="AB">Type AB - Universal Receiver 🌍</option>
+                        <option value="O">Type O - Universal Donor ❤️</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="motherRh">⚡ Mother's Rh Factor:</label>
+                    <select id="motherRh" required>
+                        <option value="">Select Rh Factor</option>
+                        <option value="+">Rh+ The Dominant Force 💪</option>
+                        <option value="-">Rh- The Rare Gift 💎</option>
+                    </select>
+                </div>
+                
+                <button onclick="prevPage(2)">⬅️ Back</button>
+                <button onclick="nextPage(2)">Next ➡️</button>
+            </div>
+        </div>
+
+        <!-- Page 3: Father's Information -->
+        <div class="page" id="page3">
+            <div class="card">
+                <h2>👨‍👧‍👦 Father's Information</h2>
+                <div class="thought">
+                    💭 "A father's strength runs through generations, written in the code of every cell." 🧬
+                </div>
+                
+                <div class="form-group">
+                    <label for="fatherName">👔 Father's Name:</label>
+                    <input type="text" id="fatherName" placeholder="Enter father's name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fatherBloodType">🩸 Father's Blood Type:</label>
+                    <select id="fatherBloodType" required>
+                        <option value="">Select Blood Type</option>
+                        <option value="A">Type A - The Harmonious 🎵</option>
+                        <option value="B">Type B - The Independent 🦅</option>
+                        <option value="AB">Type AB - Universal Receiver 🌍</option>
+                        <option value="O">Type O - Universal Donor ❤️</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fatherRh">⚡ Father's Rh Factor:</label>
+                    <select id="fatherRh" required>
+                        <option value="">Select Rh Factor</option>
+                        <option value="+">Rh+ The Dominant Force 💪</option>
+                        <option value="-">Rh- The Rare Gift 💎</option>
+                    </select>
+                </div>
+                
+                <button onclick="prevPage(3)">⬅️ Back</button>
+                <button onclick="nextPage(3)">Next ➡️</button>
+            </div>
+        </div>
+
+        <!-- Page 4: Child's Information -->
+        <div class="page" id="page4">
+            <div class="card">
+                <h2>👶 Child's Information</h2>
+                <div class="thought">
+                    💭 "Every child is a miracle, carrying the beautiful blend of their parents' genetic legacy." 🌟
+                </div>
+                
+                <div class="form-group">
+                    <label for="childName">👶 Child's Name:</label>
+                    <input type="text" id="childName" placeholder="Enter child's name" required>
+                </div>
+                
+                <button onclick="prevPage(4)">⬅️ Back</button>
+                <button onclick="nextPage(4)">🔮 Predict Blood Type</button>
+            </div>
+        </div>
+
+        <!-- Page 5: Prediction Results -->
+        <div class="page" id="page5">
+            <div class="card">
+                <h2>🔮 Blood Type Prediction</h2>
+                <div class="thought">
+                    💭 "Science reveals the mysteries of genetics! Here are the possible blood types your child may inherit." 🧪
+                </div>
+                
+                <div id="predictionResults"></div>
+                
+                <button onclick="prevPage(5)">⬅️ Back</button>
+                <button onclick="nextPage(5)">📝 Give Feedback</button>
+            </div>
+        </div>
+
+        <!-- Page 6: Feedback Form -->
+        <div class="page" id="page6">
+            <div class="card">
+                <h2>📝 Your Feedback</h2>
+                <div class="thought">
+                    💭 "Your thoughts help us grow! Share your experience and help us make this app even better." 🌱
+                </div>
+                
+                <div class="form-group">
+                    <label for="rating">⭐ Rate Your Experience:</label>
+                    <div class="rating" id="rating">
+                        <span class="star" data-rating="1">⭐</span>
+                        <span class="star" data-rating="2">⭐</span>
+                        <span class="star" data-rating="3">⭐</span>
+                        <span class="star" data-rating="4">⭐</span>
+                        <span class="star" data-rating="5">⭐</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback">💬 Your Comments:</label>
+                    <textarea id="feedback" placeholder="Tell us about your experience..."></textarea>
+                </div>
+                
+                <button onclick="prevPage(6)">⬅️ Back</button>
+                <button onclick="submitFeedback()">🚀 Submit Feedback</button>
+            </div>
+        </div>
+
+        <!-- Page 7: Thank You -->
+        <div class="page" id="page7">
+            <div class="card">
+                <div class="thank-you">
+                    <h1>🙏 Thank You!</h1>
+                    <div class="thought">
+                        💭 "Your journey through genetics has been amazing! Thank you for trusting us with your family's story." ✨
+                    </div>
+                    <div class="message">
+                        🌟 Your feedback helps us improve!<br>
+                        🩸 Science continues to amaze us!<br>
+                        👨‍👩‍👧‍👦 Family genetics are truly wonderful!
+                    </div>
+                    <button onclick="restartApp()">🔄 Visit Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let rating = 0;
+
+        // Create animated blood drops
+        function createBloodDrop() {
+            const drop = document.createElement('div');
+            drop.className = 'blood-drop';
+            drop.innerHTML = '🩸';
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDelay = Math.random() * 2 + 's';
+            drop.style.animationDuration = (Math.random() * 3 + 5) + 's';
+            document.querySelector('.blood-drops-container').appendChild(drop);
+            
+            setTimeout(() => {
+                drop.remove();
+            }, 8000);
+        }
+
+        // Create blood drops continuously
+        setInterval(createBloodDrop, 1000);
+
+        function nextPage(page) {
+            if (validatePage(page)) {
+                if (page === 4) {
+                    generatePrediction();
+                }
+                currentPage++;
+                showPage(currentPage);
+            }
+        }
+
+        function prevPage(page) {
+            currentPage--;
+            showPage(currentPage);
+        }
+
+        function showPage(pageNum) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById('page' + pageNum).classList.add('active');
+            
+            // Trigger animation
+            const card = document.querySelector('#page' + pageNum + ' .card');
+            card.style.transform = 'translateY(20px)';
+            card.style.opacity = '0';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease-out';
+                card.style.transform = 'translateY(0)';
+                card.style.opacity = '1';
+            }, 100);
+        }
+
+        function validatePage(page) {
+            switch(page) {
+                case 1:
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    if (!username || !password) {
+                        alert('👤 Please enter both username and password!');
+                        return false;
+                    }
+                    break;
+                case 2:
+                    const motherName = document.getElementById('motherName').value;
+                    const motherBloodType = document.getElementById('motherBloodType').value;
+                    const motherRh = document.getElementById('motherRh').value;
+                    if (!motherName || !motherBloodType || !motherRh) {
+                        alert('👩‍👧‍👦 Please fill all mother\'s information!');
+                        return false;
+                    }
+                    break;
+                case 3:
+                    const fatherName = document.getElementById('fatherName').value;
+                    const fatherBloodType = document.getElementById('fatherBloodType').value;
+                    const fatherRh = document.getElementById('fatherRh').value;
+                    if (!fatherName || !fatherBloodType || !fatherRh) {
+                        alert('👨‍👧‍👦 Please fill all father\'s information!');
+                        return false;
+                    }
+                    break;
+                case 4:
+                    const childName = document.getElementById('childName').value;
+                    if (!childName) {
+                        alert('👶 Please enter child\'s name!');
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+
+        function generatePrediction() {
+            const motherType = document.getElementById('motherBloodType').value;
+            const motherRh = document.getElementById('motherRh').value;
+            const fatherType = document.getElementById('fatherBloodType').value;
+            const fatherRh = document.getElementById('fatherRh').value;
+            const childName = document.getElementById('childName').value;
+
+            const predictions = calculateBloodTypes(motherType, motherRh, fatherType, fatherRh);
+            
+            let resultHTML = `
+                <div class="prediction-result">
+                    🎉 ${childName}'s Possible Blood Types
+                </div>
+                <div class="possibilities">
+            `;
+
+            predictions.forEach(pred => {
+                const emoji = getBloodTypeEmoji(pred.type);
+                resultHTML += `
+                    <div class="possibility">
+                        <span>${emoji} ${pred.type}${pred.rh}</span>
+                        <span class="probability">${pred.probability}%</span>
+                    </div>
+                `;
+            });
+
+            resultHTML += '</div>';
+            document.getElementById('predictionResults').innerHTML = resultHTML;
+        }
+
+        function calculateBloodTypes(motherType, motherRh, fatherType, fatherRh) {
+            const possibilities = [];
+            const alleles = {
+                'A': ['A', 'O'],
+                'B': ['B', 'O'],
+                'AB': ['A', 'B'],
+                'O': ['O', 'O']
+            };
+
+            const motherAlleles = alleles[motherType];
+            const fatherAlleles = alleles[fatherType];
+            const motherRhAlleles = motherRh === '+' ? ['+', '+'] : ['-', '-'];
+            const fatherRhAlleles = fatherRh === '+' ? ['+', '+'] : ['-', '-'];
+
+            const combinations = {};
+
+            for (let mType of motherAlleles) {
+                for (let fType of fatherAlleles) {
+                    for (let mRh of motherRhAlleles) {
+                        for (let fRh of fatherRhAlleles) {
+                            const childAlleles = [mType, fType].sort();
+                            const childRh = (mRh === '+' || fRh === '+') ? '+' : '-';
+                            
+                            let bloodType;
+                            if (childAlleles[0] === 'A' && childAlleles[1] === 'A') bloodType = 'A';
+                            else if (childAlleles[0] === 'B' && childAlleles[1] === 'B') bloodType = 'B';
+                            else if (childAlleles[0] === 'A' && childAlleles[1] === 'B') bloodType = 'AB';
+                            else if (childAlleles[0] === 'A' && childAlleles[1] === 'O') bloodType = 'A';
+                            else if (childAlleles[0] === 'B' && childAlleles[1] === 'O') bloodType = 'B';
+                            else bloodType = 'O';
+
+                            const combination = bloodType + childRh;
+                            combinations[combination] = (combinations[combination] || 0) + 1;
+                        }
+                    }
+                }
+            }
+
+            const total = Object.values(combinations).reduce((a, b) => a + b, 0);
+            
+            for (let [type, count] of Object.entries(combinations)) {
+                const bloodType = type.slice(0, -1);
+                const rh = type.slice(-1);
+                const probability = Math.round((count / total) * 100);
+                
+                possibilities.push({
+                    type: bloodType,
+                    rh: rh,
+                    probability: probability
+                });
+            }
+
+            return possibilities.sort((a, b) => b.probability - a.probability);
+        }
+
+        function getBloodTypeEmoji(type) {
+            switch(type) {
+                case 'A': return '🎵';
+                case 'B': return '🦅';
+                case 'AB': return '🌍';
+                case 'O': return '❤️';
+                default: return '🩸';
+            }
+        }
+
+        // Rating system
+        document.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function() {
+                rating = parseInt(this.dataset.rating);
+                updateStars();
+            });
+
+            star.addEventListener('mouseenter', function() {
+                const hoverRating = parseInt(this.dataset.rating);
+                highlightStars(hoverRating);
+            });
+        });
+
+        document.getElementById('rating').addEventListener('mouseleave', function() {
+            updateStars();
+        });
+
+        function updateStars() {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        function highlightStars(count) {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < count) {
+                    star.style.color = '#ffd700';
+                } else {
+                    star.style.color = '#ddd';
+                }
+            });
+        }
+
+        function submitFeedback() {
+            const feedbackText = document.getElementById('feedback').value;
+            if (rating === 0) {
+                alert('⭐ Please provide a rating!');
+                return;
+            }
+            
+            // Simulate feedback submission
+            setTimeout(() => {
+                nextPage(6);
+            }, 500);
+        }
+
+        function restartApp() {
+            currentPage = 1;
+            showPage(1);
+            
+            // Reset all form fields
+            document.querySelectorAll('input, select, textarea').forEach(field => {
+                field.value = '';
+            });
+            
+            rating = 0;
+            updateStars();
+        }
+
+        // Initialize the app
+        window.addEventListener('load', function() {
+            showPage(1);
+        });
+    </script>
+</body>
+</html>
